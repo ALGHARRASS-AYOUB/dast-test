@@ -8,13 +8,13 @@ jobs:
   zap_scan:
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: read
-      security-events: write
-
-      
     name: Scan ZAP website
     steps:
+      - name: Check Docker is installed
+        run: |
+          docker --version
+          docker info
+          
       - name: ZAP Scan
         uses: zaproxy/action-full-scan@v0.1.0
         with:
