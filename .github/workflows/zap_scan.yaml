@@ -16,6 +16,6 @@ jobs:
           docker info
           
       - name: ZAP Scan
-        uses: zaproxy/zap-stable
+        uses: zaproxy/action-full-scan@v0.12.0
         with:
           target: 'https://www.zaproxy.org/'
