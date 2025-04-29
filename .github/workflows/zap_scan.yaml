@@ -11,22 +11,40 @@ jobs:
 
     name: Scan ZAP website
     steps:
-      - name: Check Docker is installed
+      - name: create the working host dir for zap
         run: |
-          docker --version
-          docker info
+          if [ ! -d /zap ]; then mkdir zap; fi
           
-      - name: ZAP Scan
-        uses: zaproxy/action-full-scan@v0.12.0
-        with:
-          target: 'https://testphp.vulnweb.com/'
-          allow_issue_writing: false 
-          cmd_options: '-a'
+          
+      - name: Run ZAP full scan
+        run: |
+          docker run --rm -v ${{ github.workspace }}/zap:/zap/wrk \
+            ictu/zap2docker-weekly zap-full-scan.py \
+            -I -j -m 10 -T 60 \
+            -t http://testphp.vulnweb.com/ \
+            -r /zap/testreport.html \
+            --hook=/zap/auth_hook.py \
+            -z "
+              auth.loginurl=http://testphp.vulnweb.com/login.php \
+              auth.username=test \
+              auth.password=test \
+              auth.username_field=uname \
+              auth.password_field=pass \
+              auth.submit_field=submit \
+              auth.include=http://testphp.vulnweb.com/.* \
+              spider.maxDuration=10 \
+              ajaxSpider.maxDuration=5 \
+              ajaxSpider.browserWait=10000"
+
+      # [ -f /zap/wrk/testreport.html ] || echo "ZAP report not found!" && exit 1;
+      - name: Check if ZAP report exists
+        run: |
+          if [ ! -f /zap/testreport.html ]; then
+            echo "ZAP report not found!" && exit 1;
+          fi
 
       - name: Upload ZAP Report
         uses: actions/upload-artifact@v4
         with:
           name: zap-report
-          path: |
-            report_html.html
-            zap.out
+          path: /zap/testreport.html
