@@ -1,11 +1,18 @@
 on: 
   push:
     # only trigger on branches, not on tags
-    branches: '**'
+    branches: 
+      - '**'
 
 jobs:
   zap_scan:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      security-events: write
+
+      
     name: Scan ZAP website
     steps:
       - name: ZAP Scan
